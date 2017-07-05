@@ -1,6 +1,7 @@
 /* Walk the graph depth first recursively; 
 Add checks to ensure cyclical paths are not traversed 
 While walking harvest purchase histories of each node and initiate mergesort to get purchses sorted
+
 */
 
 var Vertex = require('../models/datamodels').Vertex;
