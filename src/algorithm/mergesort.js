@@ -4,29 +4,51 @@ function maxindex(a) {
     var max = {},
         i = 0,
         n = a.length;
-    var maxidx = -1;
 
     max.linenum = -Infinity;
     max.ts = -Infinity;
     max.index = -1;
 
+    var maxindx = -1;
+    if (a[0] && a[1]) {
+        var diff = a[0].ts - a[1].ts;
+        if (a[0].ts > a[1].ts) {
+            maxindx = 0;
+        }
+        else if (a[0].ts === a[1].ts) {
+            maxindx = (a[0].linenum > a[1].linenum) ? 0 : 1;
+        }
+        else
+            maxindx = 1;
+    }
+    else if (a[0]) {
+        maxindx = 0;
+    }
+    else if (a[1]) {
+        maxindx = 1;
+    }
+    else
+        maxindx = -1;
+
+    return maxindx;
+    /*
     for (; i < n; ++i) {
         if (a[i]) {
             if (a[i].ts > max.ts) { // compare timestamps
                 max.ts = parseInt(a[i].ts);
                 max.linenum = parseInt(a[i].linenum);
-                max.idx = i;
+                max.index = i;
             }
             else if (parseInt(a[i].ts) === max.ts) { // if timestames are the same, compare file linenumbers
                 if (a[i].linenum > max.linenum) {
                     max.linenum = parseInt(a[i].linenum);
-                    max.idx = i;
+                    max.index = i;
                 }
             }
         }
     }
 
-    return max.idx;
+    return max.index;*/
 }
 
 
@@ -39,7 +61,8 @@ var mergesort = function(purchasehistoriestomerge, maxnumberofpurchases) {
     if (purchasehistoriestomerge.length == 1) {
         var purchasehist = purchasehistoriestomerge[0];
         for (var i = 0; i < (purchasehist.length || i < maxnumberofpurchases); i++) {
-            sortedpricecollector.push(purchasehist[i]);
+            if (purchasehist[i])
+                sortedpricecollector.push(purchasehist[i]);
         }
     }
     else {

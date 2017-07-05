@@ -4,7 +4,9 @@ var dateformat = require('dateformat');
 
 var filereader = require('./filereader');
 var purchase = require('../models/datamodels').purchase;
-var depthfirst = require('../algorithm/depthfirstvisitor');
+var depthfirst = require('../algorithm/depthfirstvisitor').depthfirst;
+var mergestats = require('../algorithm/depthfirstvisitor').exportstats;
+
 
 var batchfilename = '/batch_log.json';
 var eventfilename = '/stream_log.json';
@@ -70,12 +72,12 @@ var linecb = function(batchorstream, inputfiledir, outputfilestream, graph, read
                 case 'purchase':
                     var userpurchase = Object.create(purchase);
                     userpurchase.ts = new Date(parsedline.timestamp).getTime();
-                    userpurchase.line = lineNr;
+                    userpurchase.linenum = lineNr;
                     userpurchase.amount = parsedline.amount;
                     var node = graph.findVertex(parsedline.id, true);
                     if (node) {
                         totalpurchaseevents++;
-                        node.addpurchase(userpurchase);
+                        node.addpurchase(userpurchase, trackedpurchases);
                         if (batchorstream == 'stream') {
                             // If event, we have to flag purchase as anomaly or not - the key question
                             // Walk the graph to figure that out
@@ -117,20 +119,14 @@ var linecb = function(batchorstream, inputfiledir, outputfilestream, graph, read
     }
     else if (readerevent == 'end') {
         if (batchorstream == 'batch') {
-            /*Object.keys(graph.nodes).forEach(function(key) {
-                outputfilestream.write("User ID : " + key + '\n');
-            });*/
             console.log('Batch processing took : ' + (new Date().getTime() - batchprocessstart) + ' milli seconds');
             streamprocessstart = new Date().getTime();
             filereader('stream', inputfiledir, inputfiledir + eventfilename, outputfilestream, graph, linecb);
         }
         else if (batchorstream == 'stream') {
-            /*Object.keys(graph.nodes).forEach(function(key) {
-                outputfilestream.write("Purchase history of " + graph.nodes[key].id + '\n');
-                outputfilestream.write(JSON.stringify(graph.nodes[key].getpurchasehist()) + '\n');
-            });*/
             outputfilestream.end(
                 function() {
+                    console.log("Total # of merges : " + mergestats().mergesortcnt + " and it took " + (new Date().getTime() - mergestats().mergesortstarttime));
                     console.log('Stream processing took : ' + (new Date().getTime() - streamprocessstart) + ' milli seconds');
                     console.log('Befriend count: ' + totalbefriendevents + ' ; Unfriend count: ' + totalunfriendevents + ' ; Purchase count: ' + totalpurchaseevents);
                     outputfilestream.close();
